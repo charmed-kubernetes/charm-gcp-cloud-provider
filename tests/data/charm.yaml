@@ -1,0 +1,14 @@
+description: Overlay for attaching current charm
+applications:
+  gcp-integrator:
+    charm: gcp-integrator
+    channel: edge
+    num_units: 1
+    trust: true
+  gcp-cloud-provider:
+    charm: {{charm}}
+relations:
+- ["gcp-cloud-provider:certificates", "easyrsa:client"]
+- ["gcp-cloud-provider:kube-control", "kubernetes-control-plane"]
+- ["gcp-cloud-provider:gcp-integration", "gcp-integrator:gcp"]
+- ["gcp-cloud-provider:external-cloud-provider", "kubernetes-control-plane"]

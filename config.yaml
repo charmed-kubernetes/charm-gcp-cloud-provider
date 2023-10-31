@@ -1,0 +1,50 @@
+options:
+  # Global options
+  control-node-selector:
+    description: |
+      Specifies to which nodes this charm adds the gcp-ccm daemonsets
+      Declare node labels in key=value format, separated by spaces.
+      It's also valid to not have a value, this is interpretted as an empty string.
+
+      Required if not related to kubernetes-control-plane:kube-control
+
+      e.g. 
+        node-role.kubernetes.io/control-plane=custom-value
+        node-role.kubernetes.io/control-plane=
+    type: string
+
+  provider-release:
+    type: string
+    description: |
+      Specify the version of cloud-provider as defined by the `releases`
+      directory of https://github.com/kubernetes/cloud-provider-gcp/
+
+      example)
+        juju config gcp-cloud-provider provider-release='v1.26.1'
+      
+      A list of supported versions is available through the action:
+        juju run-action gcp-cloud-provider/0 list-releases --wait
+      
+      To reset by to the latest supported by the charm use:
+        juju config gcp-cloud-provider --reset provider-release
+      
+      The current release deployed is available by viewing
+        juju status gcp-cloud-provider
+
+  controller-extra-args:
+    type: string
+    default: ""
+    description: |
+      Space separated list of flags and key=value pairs that will be passed as arguments to
+      gcp-cloud-controller-manager. For example a value like this:
+        cluster_cidr=192.160.0.0/16 v=3
+      will result in gcp-cloud-controller-manager being run with the following options:
+        --cluster_cidr=192.160.0.0/16 --v=3
+
+  enable-loadbalancers:
+    type: boolean
+    default: False
+    description: |
+      Enable the cloud-controller-manager to create public load-balancers. 
+      Primarily this alters the ClusterRole RBAC permissions allowing the
+      cloud-controller-manager to update configmaps and services in all namespaces
