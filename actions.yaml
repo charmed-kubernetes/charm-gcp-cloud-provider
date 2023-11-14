@@ -35,7 +35,7 @@ sync-resources:
       type: string
       default: ""
       description: |
-        Filter list based on "storage" manifests.
+        Filter list based on "cloud-provider" manifests.
     resources:
       type: string
       default: ""

@@ -20,7 +20,7 @@ options:
       directory of https://github.com/kubernetes/cloud-provider-gcp/
 
       example)
-        juju config gcp-cloud-provider provider-release='v1.26.1'
+        juju config gcp-cloud-provider provider-release='v0.27.1'
       
       A list of supported versions is available through the action:
         juju run-action gcp-cloud-provider/0 list-releases --wait
