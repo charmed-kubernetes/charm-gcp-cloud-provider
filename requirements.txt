@@ -6,4 +6,4 @@ pydantic==1.*
 ops.manifest>=1.1.0,<2.0.0
 ops.interface-kube-control @ git+https://github.com/charmed-kubernetes/interface-kube-control.git@main#subdirectory=ops
 ops.interface-tls-certificates @ git+https://github.com/charmed-kubernetes/interface-tls-certificates.git@main#subdirectory=ops
-ops.interface_gcp @ git+https://github.com/charmed-kubernetes/interface-gcp-integration@akd/improve-credentials#subdirectory=ops
+ops.interface_gcp @ git+https://github.com/charmed-kubernetes/interface-gcp-integration@main#subdirectory=ops

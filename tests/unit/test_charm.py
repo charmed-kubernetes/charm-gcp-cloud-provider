@@ -62,7 +62,7 @@ def kube_control():
 def gcp_integration():
     with mock.patch("charm.GCPIntegrationRequires") as mocked:
         integration = mocked.return_value
-        integration.credentials = b"{}"
+        integration.credentials = "{}"
         integration.is_ready = False
         yield integration
 
