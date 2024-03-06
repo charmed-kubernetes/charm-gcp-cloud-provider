@@ -2,10 +2,13 @@
 # See LICENSE file for licensing details.
 import logging
 import shlex
+import urllib.request
 from pathlib import Path
 
 import pytest
-from lightkube.resources.core_v1 import Node
+from lightkube.codecs import load_all_yaml
+from lightkube.resources.apps_v1 import Deployment
+from lightkube.resources.core_v1 import Node, Service
 
 log = logging.getLogger(__name__)
 
@@ -43,3 +46,24 @@ async def test_build_and_deploy(ops_test):
 async def test_provider_ids(kubernetes):
     async for node in kubernetes.list(Node):
         assert node.spec.providerID.startswith("gce://")
+
+
+async def test_loadbalancer(kubernetes):
+    log.info("Starting hello-world on port=8080.")
+    lb_yaml = Path("tests/data/lb-test.yaml")
+    lb_content = load_all_yaml(lb_yaml.open())
+    try:
+        for obj in lb_content:
+            await kubernetes.create(obj, obj.metadata.name)
+        await kubernetes.wait(Deployment, "hello", for_conditions=["Available"])
+        async for _, dep in kubernetes.watch(Service, fields={"metadata.name": "hello"}):
+            if dep.status.loadBalancer.ingress:
+                break
+        assert dep.status.loadBalancer.ingress[0].ip
+        with urllib.request.urlopen(
+            f"http://{dep.status.loadBalancer.ingress[0].ip}:8080"
+        ) as resp:
+            assert b"Hello Kubernetes!" in resp.read()
+    finally:
+        for obj in lb_content:
+            await kubernetes.delete(type(obj), obj.metadata.name)

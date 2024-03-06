@@ -1,6 +1,7 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 """Implementation of gcp specific details of the kubernetes manifests."""
+import base64
 import logging
 import pickle
 from hashlib import md5
@@ -31,10 +32,13 @@ class CreateSecret(Addition):
 
     def __call__(self) -> Optional[AnyResource]:
         """Craft the secrets object for the deployment."""
-        secret_config = {SECRET_DATA: self.manifests.config.get(SECRET_DATA)}
-        if any(s is None for s in secret_config.values()):
-            log.error("secret data item is None")
+        creds: Optional[str] = self.manifests.config.get(SECRET_DATA)
+        if not creds:
+            log.error("secret data item is Unavailable")
             return None
+
+        b64_creds = base64.b64encode(creds.encode()).decode()
+        secret_config = {SECRET_DATA: b64_creds}
 
         log.info("Encoding secret data for cloud-controller.")
         return from_dict(
@@ -179,7 +183,7 @@ class GCPProviderManifests(Manifests):
         """Returns current config available from charm config and joined relations."""
         config = {}
         if self.integrator.is_ready:
-            config[SECRET_DATA] = self.integrator.credentials.decode()
+            config[SECRET_DATA] = self.integrator.credentials
         if self.kube_control.is_ready:
             config["image-registry"] = self.kube_control.get_registry_location()
             config["control-node-taints"] = self.kube_control.get_controller_taints() or [
