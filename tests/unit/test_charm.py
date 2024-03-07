@@ -58,12 +58,12 @@ def kube_control():
         yield kube_control
 
 
-@pytest.fixture()
+@pytest.fixture(autouse=True)
 def gcp_integration():
-    with mock.patch("charm.GCPIntegratorRequires") as mocked:
+    with mock.patch("charm.GCPIntegrationRequires") as mocked:
         integration = mocked.return_value
-        integration.credentials = b"{}"
-        integration.evaluate_relation.return_value = None
+        integration.credentials = "{}"
+        integration.is_ready = False
         yield integration
 
 
@@ -129,8 +129,9 @@ def test_waits_for_kube_control(mock_create_kubeconfig, harness):
     assert charm.unit.status.message == "Provider manifests waiting for definition of gcp-creds"
 
 
-@pytest.mark.usefixtures("certificates", "kube_control", "gcp_integration")
-def test_waits_for_config(harness: Harness, lk_client, caplog):
+@pytest.mark.usefixtures("certificates", "kube_control")
+def test_waits_for_config(harness: Harness, lk_client, caplog, gcp_integration):
+    gcp_integration.is_ready = True
     harness.begin_with_initial_hooks()
     with mock.patch.object(lk_client, "list") as mock_list:
         mock_list.return_value = [mock.Mock(**{"metadata.annotations": {}})]

@@ -1,8 +1,9 @@
 backports.cached-property
-ops>=1.3.0,<2.0.0
+ops
 lightkube>=0.10.1,<1.0.0
 pyyaml
 pydantic==1.*
 ops.manifest>=1.1.0,<2.0.0
-git+https://github.com/charmed-kubernetes/interface-kube-control.git@6dd289d1c795fdeda1bed17873b8d6562227c829#subdirectory=ops
-git+https://github.com/charmed-kubernetes/interface-tls-certificates.git@339efe3823b9728d16cdf5bcd1fc3b5de4e68923#subdirectory=ops
+ops.interface-kube-control @ git+https://github.com/charmed-kubernetes/interface-kube-control.git@main#subdirectory=ops
+ops.interface-tls-certificates @ git+https://github.com/charmed-kubernetes/interface-tls-certificates.git@main#subdirectory=ops
+ops.interface_gcp @ git+https://github.com/charmed-kubernetes/interface-gcp-integration@main#subdirectory=ops

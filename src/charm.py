@@ -8,6 +8,7 @@ from pathlib import Path
 
 from ops.charm import CharmBase
 from ops.framework import StoredState
+from ops.interface_gcp.requires import GCPIntegrationRequires
 from ops.interface_kube_control import KubeControlRequirer
 from ops.interface_tls_certificates import CertificatesRequires
 from ops.main import main
@@ -16,7 +17,6 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingSta
 
 from config import CharmConfig
 from provider_manifests import GCPProviderManifests
-from requires_gcp_integration import GCPIntegratorRequires
 
 log = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class GcpCloudProviderCharm(CharmBase):
         super().__init__(*args)
 
         # Relation Validator and datastore
-        self.integrator = GCPIntegratorRequires(self)
+        self.integrator = GCPIntegrationRequires(self, "gcp-integration")
         self.kube_control = KubeControlRequirer(self)
         self.certificates = CertificatesRequires(self)
         # Config Validator and datastore
@@ -105,6 +105,8 @@ class GcpCloudProviderCharm(CharmBase):
 
     def _request_gcp_features(self, event):
         self.integrator.enable_instance_inspection()
+        self.integrator.enable_network_management()
+        self.integrator.enable_security_management()
         self._merge_config(event=event)
 
     def _update_status(self, _):
