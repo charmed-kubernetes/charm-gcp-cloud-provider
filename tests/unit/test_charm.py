@@ -10,7 +10,7 @@ from pathlib import Path
 import ops.testing
 import pytest
 import yaml
-from ops.model import BlockedStatus, WaitingStatus
+from ops.model import BlockedStatus, MaintenanceStatus, WaitingStatus
 from ops.testing import Harness
 
 from charm import GcpCloudProviderCharm
@@ -35,6 +35,15 @@ def mock_ca_cert(tmpdir):
 
 
 @pytest.fixture()
+def gcp_integration():
+    with mock.patch("charm.GCPIntegrationRequires") as mocked:
+        integration = mocked.return_value
+        integration.evaluate_relation.return_value = None
+        integration.credentials = "abc"
+        yield integration
+
+
+@pytest.fixture()
 def certificates():
     with mock.patch("charm.CertificatesRequires") as mocked:
         certificates = mocked.return_value
@@ -51,6 +60,7 @@ def kube_control():
         kube_control.get_registry_location.return_value = "rocks.canonical.com/cdk"
         kube_control.get_controller_taints.return_value = []
         kube_control.get_controller_labels.return_value = []
+        kube_control.get_ca_certificate.return_value = None
         kube_control.get_cluster_tag.return_value = "kubernetes-4ypskxahbu3rnfgsds3pksvwe3uh0lxt"
         kube_control.get_cluster_cidr.return_value = ip_network("192.168.0.0/16")
         kube_control.relation.app.name = "kubernetes-control-plane"
@@ -58,15 +68,7 @@ def kube_control():
         yield kube_control
 
 
-@pytest.fixture(autouse=True)
-def gcp_integration():
-    with mock.patch("charm.GCPIntegrationRequires") as mocked:
-        integration = mocked.return_value
-        integration.credentials = "{}"
-        integration.is_ready = False
-        yield integration
-
-
+@pytest.mark.usefixtures("gcp_integration", "kube_control")
 def test_waits_for_certificates(harness):
     harness.begin_with_initial_hooks()
     charm = harness.charm
@@ -89,13 +91,13 @@ def test_waits_for_certificates(harness):
         "easyrsa/0",
         yaml.safe_load(Path("tests/data/certificates_data.yaml").read_text()),
     )
-    assert isinstance(charm.unit.status, BlockedStatus)
-    assert charm.unit.status.message == "Missing required kube-control relation"
+    assert isinstance(charm.unit.status, MaintenanceStatus)
+    assert charm.unit.status.message == "Deploying GCP Cloud Provider"
 
 
 @mock.patch("ops.interface_kube_control.KubeControlRequirer.create_kubeconfig")
-@pytest.mark.usefixtures("certificates")
-def test_waits_for_kube_control(mock_create_kubeconfig, harness):
+@pytest.mark.usefixtures("gcp_integration", "certificates")
+def test_waits_for_kube_control(mock_create_kubeconfig, harness, caplog):
     harness.begin_with_initial_hooks()
     charm = harness.charm
     assert isinstance(charm.unit.status, BlockedStatus)
@@ -114,6 +116,7 @@ def test_waits_for_kube_control(mock_create_kubeconfig, harness):
     assert charm.unit.status.message == "Waiting for kube-control relation"
     mock_create_kubeconfig.assert_not_called()
 
+    caplog.clear()
     harness.update_relation_data(
         rel_id,
         "kubernetes-control-plane/0",
@@ -125,8 +128,19 @@ def test_waits_for_kube_control(mock_create_kubeconfig, harness):
             mock.call(charm.CA_CERT_PATH, "/home/ubuntu/.kube/config", "ubuntu", charm.unit.name),
         ]
     )
-    assert isinstance(charm.unit.status, BlockedStatus)
-    assert charm.unit.status.message == "Provider manifests waiting for definition of gcp-creds"
+    assert charm.unit.status ==  MaintenanceStatus("Deploying GCP Cloud Provider")
+    provider_messages = {r.message for r in caplog.records if "provider" in r.filename}
+    assert provider_messages == {
+       'Adding provider tolerations from control-plane',
+       'Adjusting container arguments',
+       'Adjusting container cloud-config secret',
+       'Applying provider Control Node Selector as '
+       'node-role.kubernetes.io/control-plane: "true"',
+       'Encode cloud-config for cloud-controller.',
+       'Encoding secret data for cloud-controller.',
+       'Skip Loadbalancer RBAC Rule adjustments.',
+    }
+    caplog.clear()
 
 
 @pytest.mark.usefixtures("certificates", "kube_control")
@@ -169,6 +183,7 @@ def test_waits_for_config(harness: Harness, lk_client, caplog, gcp_integration):
         }
 
 
+@pytest.mark.usefixtures("gcp_integration")
 def test_install_or_upgrade_apierror(harness: Harness, lk_client, api_error_klass):
     lk_client.apply.side_effect = [mock.MagicMock(), api_error_klass]
     harness.begin_with_initial_hooks()
