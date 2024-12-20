@@ -10,7 +10,7 @@ import pytest
 from lightkube import AsyncClient, KubeConfig
 from lightkube.models.meta_v1 import ObjectMeta
 from lightkube.resources.core_v1 import Namespace
-from pytest_operator import OpsTest
+from pytest_operator.plugin import OpsTest
 
 log = logging.getLogger(__name__)
 
