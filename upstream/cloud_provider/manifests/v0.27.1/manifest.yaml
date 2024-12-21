@@ -275,21 +275,6 @@ rules:
   verbs:
   - list
   - delete
-- apiGroups:
-  - ""
-  resources:
-  - service/status
-  verbs:
-  - patch
-  - update
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - create
-  - patch
-  - update
 ---
 
 # https://github.com/kubernetes/cloud-provider-gcp/blob/master/deploy/cloud-node-controller-binding.yaml
