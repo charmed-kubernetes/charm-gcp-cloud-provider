@@ -4,6 +4,6 @@ lightkube>=0.10.1,<1.0.0
 pyyaml
 pydantic==1.*
 ops.manifest>=1.1.0,<2.0.0
-ops.interface-kube-control @ git+https://github.com/charmed-kubernetes/interface-kube-control.git@main#subdirectory=ops
-ops.interface-tls-certificates @ git+https://github.com/charmed-kubernetes/interface-tls-certificates.git@main#subdirectory=ops
-ops.interface_gcp @ git+https://github.com/charmed-kubernetes/interface-gcp-integration@main#subdirectory=ops
+ops.interface-kube-control @ git+https://github.com/charmed-kubernetes/interface-kube-control.git@ops-0.2.0#subdirectory=ops
+ops.interface-tls-certificates @ git+https://github.com/charmed-kubernetes/interface-tls-certificates.git@236e089493c96feac5ea1a8617b1059a4477a04e#subdirectory=ops
+ops.interface_gcp @ git+https://github.com/charmed-kubernetes/interface-gcp-integration@d40ac109cf178fdbff9f597214e399320b8b219c#subdirectory=ops
