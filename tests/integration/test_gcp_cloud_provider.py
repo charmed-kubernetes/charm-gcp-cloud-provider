@@ -9,12 +9,13 @@ import pytest
 from lightkube.codecs import load_all_yaml
 from lightkube.resources.apps_v1 import Deployment
 from lightkube.resources.core_v1 import Node, Service
+from pytest_operator.plugin import OpsTest
 
 log = logging.getLogger(__name__)
 
 
 @pytest.mark.abort_on_fail
-async def test_build_and_deploy(ops_test):
+async def test_build_and_deploy(ops_test: OpsTest):
     charm = next(Path(".").glob("gcp-cloud-provider*.charm"), None)
     if not charm:
         log.info("Build Charm...")
