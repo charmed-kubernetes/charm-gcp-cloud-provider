@@ -1,5 +1,11 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
+[project]
+name="azure-cloud-provider"
+version = "0.0.0"
+description = "Charmed Operators for Azure Cloud Provider"
+readme = "README.md"
+requires-python = ">=3.10"
 
 # Testing tools configuration
 [tool.coverage.run]
@@ -14,17 +20,16 @@ log_cli_level = "INFO"
 asyncio_mode = "auto"
 
 # Formatting tools configuration
-[tool.black]
+[tool.ruff]
 line-length = 99
-target-version = ["py310"]
-
-[tool.isort]
-profile = "black"
 
 # Linting tools configuration
-[tool.flake8]
+# Linting tools configuration
+[pycodestyle]
 max-line-length = 99
 max-doc-length = 99
+
+[tool.lint.mccabe]
 max-complexity = 10
 exclude = [".git", "__pycache__", ".tox", "build", "dist", "*.egg_info", "venv"]
 select = ["E", "W", "F", "C", "N", "R", "D", "H"]
@@ -41,3 +46,4 @@ copyright-regexp = "Copyright\\s\\d{4}([-,]\\d{4})*\\s+%(author)s"
 
 [tool.mypy]
 mypy_path = "src:lib"
+ignore_missing_imports = true

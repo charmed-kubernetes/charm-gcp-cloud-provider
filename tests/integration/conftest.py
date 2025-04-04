@@ -31,7 +31,7 @@ async def get_leader(app):
     for idx, flag in enumerate(is_leader):
         if flag:
             return idx
-        
+
 
 @pytest.fixture()
 async def kubeconfig(ops_test: OpsTest):
@@ -42,7 +42,7 @@ async def kubeconfig(ops_test: OpsTest):
         pytest.fail("No kubernetes-control-plane or k8s application found")
     leader_idx = await get_leader(app)
     leader = app.units[leader_idx]
-    
+
     kubeconfig_path = ops_test.tmp_path / "kubeconfig"
     action = await leader.run_action("get-kubeconfig")
     data = await action.wait()
