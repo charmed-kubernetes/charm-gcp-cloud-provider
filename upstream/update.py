@@ -2,6 +2,7 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 """Update to a new upstream release."""
+
 import argparse
 import json
 import logging
@@ -155,7 +156,7 @@ def download(source: str, release: Release) -> Release:
     """Download the manifest files for a specific release."""
     log.info(f"Getting Release {source}: {release.name}")
     manifest = SOURCES[source]["manifest"]
-    dest = FILEDIR / source / "manifests" / release.name / manifest   
+    dest = FILEDIR / source / "manifests" / release.name / manifest
     dest.parent.mkdir(exist_ok=True)
     urllib.request.urlretrieve(release.path, dest)
     return Release(release.name, dest)
@@ -236,10 +237,7 @@ def get_argparser():
         default=list(SOURCES.keys()),
         choices=SOURCES.keys(),
         type=str,
-        help="Which manifest sources to be updated.\n\n"
-        "example\n"
-        "  --source storage_provider\n"
-        "\n",
+        help="Which manifest sources to be updated.\n\nexample\n  --source storage_provider\n\n",
     )
     return parser
 

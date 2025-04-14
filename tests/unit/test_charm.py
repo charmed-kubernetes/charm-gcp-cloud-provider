@@ -128,17 +128,16 @@ def test_waits_for_kube_control(mock_create_kubeconfig, harness, caplog):
             mock.call(charm.CA_CERT_PATH, "/home/ubuntu/.kube/config", "ubuntu", charm.unit.name),
         ]
     )
-    assert charm.unit.status ==  MaintenanceStatus("Deploying GCP Cloud Provider")
+    assert charm.unit.status == MaintenanceStatus("Deploying GCP Cloud Provider")
     provider_messages = {r.message for r in caplog.records if "provider" in r.filename}
     assert provider_messages == {
-       'Adding provider tolerations from control-plane',
-       'Adjusting container arguments',
-       'Adjusting container cloud-config secret',
-       'Applying provider Control Node Selector as '
-       'node-role.kubernetes.io/control-plane: "true"',
-       'Encode cloud-config for cloud-controller.',
-       'Encoding secret data for cloud-controller.',
-       'Skip Loadbalancer RBAC Rule adjustments.',
+        "Adding provider tolerations from control-plane",
+        "Adjusting container arguments",
+        "Adjusting container cloud-config secret",
+        'Applying provider Control Node Selector as node-role.kubernetes.io/control-plane: "true"',
+        "Encode cloud-config for cloud-controller.",
+        "Encoding secret data for cloud-controller.",
+        "Skip Loadbalancer RBAC Rule adjustments.",
     }
     caplog.clear()
 

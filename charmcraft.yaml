@@ -2,23 +2,167 @@
 # https://juju.is/docs/sdk/charmcraft-config
 
 type: "charm"
+name: gcp-cloud-provider
+title: GCP Cloud Provider
+summary: Runs the GCP Cloud Provider in the cluster.
+description: >-
+  The gcp cloud provider provides the Kubernetes cluster access to
+  native resources from gcp such as load-balancers
+links:
+  contact: https://launchpad.net/~containers
+  source:
+  - https://github.com/charmed-kubernetes/gcp-cloud-provider
+  issues:
+  - https://bugs.launchpad.net/charm-gcp-cloud-provider
+  documentation: https://discourse.charmhub.io/t/gcp-cloud-provider-docs-index/????
+
+subordinate: true
+
+config:
+  options:
+    # Global options
+    control-node-selector:
+      description: |
+        Specifies to which nodes this charm adds the gcp-ccm daemonsets
+        Declare node labels in key=value format, separated by spaces.
+        It's also valid to not have a value, this is interpretted as an empty string.
+
+        Required if not related to kubernetes-control-plane:kube-control
+
+        e.g. 
+          node-role.kubernetes.io/control-plane=custom-value
+          node-role.kubernetes.io/control-plane=
+      type: string
+
+    provider-release:
+      type: string
+      description: |
+        Specify the version of cloud-provider as defined by the `releases`
+        directory of https://github.com/kubernetes/cloud-provider-gcp/
+
+        example)
+          juju config gcp-cloud-provider provider-release='v0.27.1'
+        
+        A list of supported versions is available through the action:
+          juju run-action gcp-cloud-provider/0 list-releases --wait
+        
+        To reset by to the latest supported by the charm use:
+          juju config gcp-cloud-provider --reset provider-release
+        
+        The current release deployed is available by viewing
+          juju status gcp-cloud-provider
+
+    controller-extra-args:
+      type: string
+      default: ""
+      description: |
+        Space separated list of flags and key=value pairs that will be passed as arguments to
+        gcp-cloud-controller-manager. For example a value like this:
+          cluster_cidr=192.160.0.0/16 v=3
+        will result in gcp-cloud-controller-manager being run with the following options:
+          --cluster_cidr=192.160.0.0/16 --v=3
+
+    enable-loadbalancers:
+      type: boolean
+      default: False
+      description: |
+        Enable the cloud-controller-manager to create public load-balancers. 
+        Primarily this alters the ClusterRole RBAC permissions allowing the
+        cloud-controller-manager to update configmaps and services in all namespaces
+
+actions:
+  list-versions:
+    description: List Cloud Provider and Storage Versions supported by this charm
+  list-resources:
+    description: List Cloud Provider and Storage Resources of configured version
+    params:
+      controller:
+        type: string
+        default: ""
+        description: |
+          Filter list based on "provider" or "storage" manifests.
+      resources:
+        type: string
+        default: ""
+        description: |
+          Space separated list of kubernetes resource types to filter list result
+  scrub-resources:
+    description: Remove deployments other than the current one
+    params:
+      controller:
+        type: string
+        default: ""
+        description: |
+          Filter list based on "provider" or "storage" manifests.
+      resources:
+        type: string
+        default: ""
+        description: |
+          Space separated list of kubernetes resource types to filter scrubbing   
+  sync-resources:
+    description: |
+      Add kubernetes resources which should be created by this charm which aren't
+      present within the cluster.
+    params:
+      controller:
+        type: string
+        default: ""
+        description: |
+          Filter list based on "cloud-provider" manifests.
+      resources:
+        type: string
+        default: ""
+        description: |
+          Space separated list of kubernetes resource types
+          to use a filter during the sync. This helps limit
+          which missing resources are applied.
+
+provides:
+  external-cloud-provider:
+    interface: external_cloud_provider
+    limit: 1
+
+requires:
+  gcp-integration:
+    interface: gcp-integration
+    scope: container
+    limit: 1
+  kube-control:
+    interface: kube-control
+    limit: 1
+  certificates:
+    interface: tls-certificates
+
 bases:
   - build-on:
-    - name: "ubuntu"
-      channel: "20.04"
-      architectures: ["amd64"]
-    run-on:
-    - name: "ubuntu"
-      channel: "20.04"
-      architectures:
-        - amd64
     - name: "ubuntu"
       channel: "22.04"
       architectures:
         - amd64
+    run-on:
+    - name: "ubuntu"
+      channel: "22.04"
+      architectures:
+        - amd64
+        - armhf
+        - arm64
+    - name: "ubuntu"
+      channel: "24.04"
+      architectures:
+        - amd64
+        - armhf
+        - arm64
 parts:
   charm:
-    build-packages: [git]
-    charm-python-packages: [setuptools, pip]
+    source: .
+    plugin: charm
+    override-build: |
+      craftctl default
+      git -C $CRAFT_PROJECT_DIR rev-parse --short HEAD > version
+    build-packages:
+    - git
+    charm-python-packages:
+    - setuptools
+    - pip
     prime:
-      - upstream/**
+    - upstream/**
